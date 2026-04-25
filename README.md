@@ -7,35 +7,28 @@
 ## 📌 Proje Özeti
 Bu proje, havacılık ve savunma sanayiinde hayati öneme sahip olan **Kestirimci Bakım (Predictive Maintenance)** konseptini gerçek dünya verileriyle modelleyen bir yapay zeka sistemidir. Uçak/İHA motorlarındaki çeşitli sensörlerden alınan telemetri verileri analiz edilerek, motorun arızalanmasına kaç uçuş döngüsü (cycle) kaldığı önceden tahmin edilir.
 
-## 📊 Açık Kaynak Veri Seti ve Atıf (Dataset & Citation)
+## 📊 Açık Kaynak Veri Seti (Dataset)
 **Projede sentetik veri DEĞİL, gerçek saha verileri kullanılmıştır.**
-*   **Kaynak:** NASA Ames Research Center
-*   **Veri Seti:** C-MAPSS (Commercial Modular Aero-Propulsion System Simulation)
-*   **İçerik:** Çoklu sensör verileri (21 farklı sensör: Sıcaklık, basınç, fan hızı, yakıt akışı vb.)
-*   **Kaggle Linki:** [NASA C-MAPSS Dataset on Kaggle](https://www.kaggle.com/datasets/behrad3d/nasa-cmaps)
-
-*Bu veri seti, zaman serisi tahmini (Time Series Forecasting) ve ekipman bozulma modellemesi alanında global endüstri standardı kabul edilmektedir.*
+*   **Kaynak:** NASA Ames Research Center (C-MAPSS)
+*   **İçerik:** 21 farklı sensör (Sıcaklık, basınç, fan hızı vb.)
+*   **Kaggle Linki:** [NASA C-MAPSS Dataset](https://www.kaggle.com/datasets/behrad3d/nasa-cmaps)
 
 ## 🎯 İş Problemi ve Çözüm
-**Problem:** Motor arızaları uçuş güvenliğini tehdit eder. Geleneksel "Reaktif Bakım" (bozulunca tamir et) veya "Periyodik Bakım" (sağlam olsa bile zamanı gelince parça değiştir) yöntemleri uçuş güvenliği açısından yetersiz ve ekonomik olarak büyük maliyetlidir.
-**Çözüm:** Sensör verilerindeki anomalileri ve bozulma trendlerini öğrenen bir makine öğrenmesi modeli (Random Forest Regressor) ile her bir motor için **Kalan Faydalı Ömür (RUL - Remaining Useful Life)** tahmini yapmak.
+**Problem:** Motor arızaları uçuş güvenliğini tehdit eder. Geleneksel "Reaktif" veya "Periyodik" bakım yöntemleri maliyetli ve yetersizdir.
+**Çözüm:** Sensör verilerindeki bozulma trendlerini öğrenen bir makine öğrenmesi modeli (Random Forest Regressor) ile **Kalan Faydalı Ömür (RUL)** tahmini yapmak.
 
-## 🧠 Teknik Yaklaşım ve Modelleme
-1.  **Veri Temizleme ve Ön İşleme:** Ham log dosyaları (`.txt`) parse edilmiş, sensör verileri ayrıştırılmış ve her bir zaman adımı (cycle) için `RUL` hedef değişkeni matematiksel olarak hesaplanmıştır.
-2.  **Özellik Seçimi:** 21 sensör ve 3 operasyonel ayar (setting) verisi modele girdi (feature) olarak verilmiştir.
-3.  **Algoritma:** Doğrusal olmayan karmaşık sensör ilişkilerini iyi yakalayan **Random Forest Regressor** kullanılmıştır.
+## 🏗️ Sistem Mimarisi (Telemetri Akışı)
+```mermaid
+graph TD
+    A[İHA / Uçak Sensör Logları] -->|Ham Veri| B(Zaman Serisi Ön İşleme)
+    B --> C[RUL Hedef Değişkeni Hesaplama]
+    C --> D{Random Forest Regressor}
+    D -->|Sensörlerde Bozulma Sinyali| E[⚠️ RUL: 15 Uçuş Kaldı]
+    E --> F[Yer İstasyonu Bakım Uyarısı]
+```
 
 ## 📈 Model Performansı
-Model, daha önce hiç görmediği motor verileri üzerinde test edildiğinde aşağıdaki sonuçları üretmektedir:
-
 ```text
---- Havacilik Kestirimci Bakim Modeli (NASA C-MAPSS) Baslatiliyor ---
-
-[1/4] Gercek NASA Veriseti (train_FD001.txt) yukleniyor...
-[2/4] Kalan Faydali Omur (RUL) Hedef Degiskeni Hesaplaniyor...
-[3/4] RandomForestRegressor ile Kestirimci Bakim Modeli Egitiliyor...
-[4/4] Test Verisi Uzerinde Performans Olculuyor...
-
 ==================================================
 HAVACILIK MOTOR ANALIZ RAPORU
 ==================================================
@@ -43,17 +36,44 @@ Hata Payi (RMSE): 17.84 Cycle (Ucus Degeri)
 R2 Score: %90.15
 ==================================================
 ```
-*(Modelimiz, bir motorun ne zaman arıza vereceğini ortalama 17 uçuş döngüsü gibi düşük bir sapma ile tahmin edebilmektedir.)*
+*(Modelimiz, bir motorun ne zaman arıza vereceğini ortalama 17 uçuş döngüsü sapma ile tahmin edebilmektedir.)*
 
-## 🚀 Kurulum ve Çalıştırma
-Projeyi yerel bilgisayarınızda çalıştırmak için:
+## 📂 Proje Yapısı
+```text
+Predictive-Maintenance-NASA/
+├── data/
+│   ├── train_FD001.txt         # NASA Eğitim Verisi
+│   └── test_FD001.txt          # NASA Test Verisi
+├── src/
+│   ├── data_loader.py          # NASA verisi ayrıştırma
+│   └── predictive_maintenance.py # Model eğitimi
+├── models/                     # Eğitilmiş RUL modeli
+├── requirements.txt       
+└── README.md              
+```
 
-1.  Gerekli kütüphaneleri kurun:
-    ```bash
-    pip install pandas numpy scikit-learn
-    ```
-2.  Veri setini Kaggle üzerinden indirin ve `train_FD001.txt` dosyasını ana dizine koyun.
-3.  Uygulamayı çalıştırın:
-    ```bash
-    python predictive_maintenance.py
-    ```
+## 💻 Programatik Kullanım
+```python
+from src.predictive_maintenance import NASARulPredictor
+
+model = NASARulPredictor(model_path="models/rf_model.pkl")
+# Motordan gelen anlık sensör verileri
+sensor_verisi = [580, 15.2, 2380, 46] 
+kalan_omur = model.predict_rul(sensor_verisi)
+
+if kalan_omur < 20:
+    print("⚠️ ACİL UYARI: Bakım Ekipleri Yönlendirilsin!")
+```
+
+## 🚀 Kurulum
+```bash
+git clone https://github.com/Umitsencer/Predictive-Maintenance-NASA.git
+pip install -r requirements.txt
+python src/predictive_maintenance.py
+```
+
+## 📜 Lisans ve İletişim
+Bu proje **MIT Lisansı** ile lisanslanmıştır. Dilediğiniz gibi geliştirebilirsiniz.
+- **Geliştirici:** Ümit SENCER
+- **İletişim:** [LinkedIn Profilim](https://www.linkedin.com/in/umitsencer/)
+```
